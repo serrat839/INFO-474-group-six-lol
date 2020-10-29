@@ -20,7 +20,7 @@ token <- content(r)$access_token
 headerValue <- paste0("Bearer ", token)
 
 # load in our song data
-award_winners <-read.csv("grammy_album_clean.csv", stringsAsFactors = F)
+award_winners <-read.csv("./unclean_data/grammy_album_clean.csv", stringsAsFactors = F)
 
 # search for album ids
 album_id_get <- function(album, artist, header_val) {
@@ -42,18 +42,34 @@ album_id_get <- function(album, artist, header_val) {
   response <- GET(url=paste0(search_endpoint, query), add_headers(Authorization=header_val))
   response_content <- content(response)
   response_content <- response_content$albums$items
-  if (length(response_content) == 0) {
-    return("N/A")
-  }
-
-  return(response_content[[1]][["id"]])
+  
+  return(response_content)
 }
 
 album_ids <- c()
+large_image <- c()
+med_image <- c()
+small_image <- c()
+
 for (idx in 1:nrow(award_winners)) {
-  album_ids <- c(album_ids, album_id_get(award_winners$album[idx], award_winners$artist[idx], headerValue))
+  album_data <- album_id_get(award_winners$album[idx], award_winners$artist[idx], headerValue)
+  if (length(album_data) == 0) {
+    album_ids <- c(album_ids, "N/A")
+    large_image <- c(large_image, "N/A")
+    med_image <- c(med_image, "N/A")
+    small_image <- c(small_image, "N/A")  
+  } else {
+    album_data <- album_data[[1]]
+    album_ids <- c(album_ids, album_data$id)
+    large_image <- c(large_image, album_data$images[[1]]$url)
+    med_image <- c(med_image, album_data$images[[2]]$url)
+    small_image <- c(small_image, album_data$images[[3]]$url)
+  }
 }
 award_winners$album_id <- album_ids
+award_winners$large_image <- large_image
+award_winners$med_image <- med_image
+award_winners$small_image <- small_image
 
 # write csv. Inspect for NA values.
-write.csv(award_winners, "award_winner_ids.csv", row.names = F)
+write.csv(award_winners, "./unclean_data/award_winner_ids.csv", row.names = F)
