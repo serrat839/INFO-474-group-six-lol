@@ -56,4 +56,4 @@ write.csv(lyric_data, "./clean_data/lyric_data.csv")
 
 data2 <- left_join(data, lyric_data, by= c("artist" = "artist", "track" = "song"))
 
-write.csv(lyric_data, "./clean_data/album_song_lyric_data.csv")
+write.csv(data2, "./clean_data/album_song_lyric_data.csv")
